@@ -1,0 +1,25 @@
+
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  align-items: stretch;
+}
+
+.dashboard-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-content {
+  padding: 32px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+  .dashboard-content {
+    padding: 20px;
+  }
+}

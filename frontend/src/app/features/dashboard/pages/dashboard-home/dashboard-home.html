@@ -1,0 +1,71 @@
+
+<section class="dashboard">
+  <div class="welcome">
+    <div>
+      <span class="eyebrow">DEVFLOW AI / OVERVIEW</span>
+      <h2>Seu workspace inteligente</h2>
+      <p>
+        Gerencie projetos, acompanhe tarefas e transforme
+        informações em decisões.
+      </p>
+    </div>
+
+    <span class="demo-badge">Dados demonstrativos</span>
+  </div>
+
+  <div class="metrics-grid">
+    @for (metric of metrics; track metric.label) {
+      <article class="metric-card">
+        <div class="metric-top">
+          <span>{{ metric.label }}</span>
+          <span class="metric-icon">{{ metric.icon }}</span>
+        </div>
+
+        <strong>{{ metric.value }}</strong>
+        <small>Exemplo de indicador</small>
+      </article>
+    }
+  </div>
+
+  <div class="dashboard-grid">
+    <article class="panel">
+      <div class="panel-heading">
+        <h3>Atividade dos projetos</h3>
+        <span>Prévia do módulo</span>
+      </div>
+
+      <div class="placeholder-chart">
+        <span>Os gráficos serão implementados nesta área.</span>
+      </div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-heading">
+        <h3>Status do sistema</h3>
+        <span>Monitoramento</span>
+      </div>
+
+      <div class="system-status">
+        <span
+          class="status-indicator"
+          [class.connected]="apiConnected()"
+        ></span>
+
+        <div>
+          <strong>{{ apiStatus() }}</strong>
+          <p>Integração Angular + Go</p>
+        </div>
+      </div>
+
+      <div class="system-detail">
+        <span>Serviço</span>
+        <strong>DevFlow AI API</strong>
+      </div>
+
+      <div class="system-detail">
+        <span>Endpoint</span>
+        <code>GET /api/health</code>
+      </div>
+    </article>
+  </div>
+</section>
