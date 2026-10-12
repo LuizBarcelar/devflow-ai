@@ -26,7 +26,15 @@
       Projetos
     </a>
 
-    <span class="nav-placeholder">☑ Tarefas</span>
+    <a
+      routerLink="/tasks"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      <span>☑</span>
+      Tarefas
+    </a>
+
     <span class="nav-placeholder">✧ Assistente IA</span>
   </nav>
 

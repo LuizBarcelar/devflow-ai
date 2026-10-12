@@ -1,0 +1,182 @@
+
+<section class="tasks-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">WORKSPACE / TASKS</span>
+      <h1>Gerenciamento de tarefas</h1>
+      <p>Organize suas entregas e acompanhe o progresso dos projetos.</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="message error">{{ error() }}</div>
+  }
+
+  @if (feedback()) {
+    <div class="message success">{{ feedback() }}</div>
+  }
+
+  <div class="stats">
+    <article class="stat-card">
+      <span>Total de tarefas</span>
+      <strong>{{ tasks().length }}</strong>
+    </article>
+
+    <article class="stat-card">
+      <span>Em andamento</span>
+      <strong>{{ inProgressCount() }}</strong>
+    </article>
+
+    <article class="stat-card">
+      <span>Concluídas</span>
+      <strong>{{ completedCount() }}</strong>
+    </article>
+  </div>
+
+  <section class="panel">
+    <h2>{{ editingId() ? 'Editar tarefa' : 'Nova tarefa' }}</h2>
+
+    <form (ngSubmit)="save()" #taskForm="ngForm">
+      <div class="form-grid">
+        <label>
+          Título
+          <input
+            name="title"
+            [(ngModel)]="form.title"
+            placeholder="Ex.: Implementar autenticação"
+            maxlength="150"
+            required
+          />
+        </label>
+
+        <label>
+          Projeto
+          <select name="projectId" [(ngModel)]="form.projectId" required>
+            <option value="">Selecione um projeto</option>
+            @for (project of projects(); track project.id) {
+              <option [value]="project.id">{{ project.name }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          Status
+          <select name="status" [(ngModel)]="form.status">
+            <option value="todo">A fazer</option>
+            <option value="in_progress">Em andamento</option>
+            <option value="completed">Concluída</option>
+          </select>
+        </label>
+
+        <label>
+          Prioridade
+          <select name="priority" [(ngModel)]="form.priority">
+            <option value="low">Baixa</option>
+            <option value="medium">Média</option>
+            <option value="high">Alta</option>
+          </select>
+        </label>
+
+        <label class="full-width">
+          Descrição
+          <textarea
+            name="description"
+            [(ngModel)]="form.description"
+            rows="3"
+            placeholder="Detalhes da tarefa..."
+          ></textarea>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        @if (editingId()) {
+          <button type="button" class="secondary" (click)="cancelEdit()">
+            Cancelar
+          </button>
+        }
+
+        <button type="submit" [disabled]="taskForm.invalid || saving()">
+          {{ saving() ? 'Salvando...' : editingId() ? 'Salvar alterações' : 'Criar tarefa' }}
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="section-heading">
+      <h2>Tarefas cadastradas</h2>
+      <span>{{ filteredTasks().length }} resultado(s)</span>
+    </div>
+
+    <div class="filters">
+      <select
+        aria-label="Filtrar por projeto"
+        [ngModel]="filterProject()"
+        (ngModelChange)="filterProject.set($event)"
+      >
+        <option value="">Todos os projetos</option>
+        @for (project of projects(); track project.id) {
+          <option [value]="project.id">{{ project.name }}</option>
+        }
+      </select>
+
+      <select
+        aria-label="Filtrar por status"
+        [ngModel]="filterStatus()"
+        (ngModelChange)="filterStatus.set($event)"
+      >
+        <option value="">Todos os status</option>
+        <option value="todo">A fazer</option>
+        <option value="in_progress">Em andamento</option>
+        <option value="completed">Concluídas</option>
+      </select>
+
+      <select
+        aria-label="Filtrar por prioridade"
+        [ngModel]="filterPriority()"
+        (ngModelChange)="filterPriority.set($event)"
+      >
+        <option value="">Todas as prioridades</option>
+        <option value="low">Baixa</option>
+        <option value="medium">Média</option>
+        <option value="high">Alta</option>
+      </select>
+    </div>
+
+    @if (loading()) {
+      <p class="empty-state">Carregando tarefas...</p>
+    } @else if (filteredTasks().length === 0) {
+      <p class="empty-state">Nenhuma tarefa encontrada.</p>
+    } @else {
+      <div class="task-list">
+        @for (task of filteredTasks(); track task.id) {
+          <article class="task-card">
+            <div class="task-content">
+              <h3>{{ task.title }}</h3>
+              <p>{{ task.description || 'Sem descrição.' }}</p>
+
+              <div class="task-meta">
+                <span>{{ projectName(task.projectId) }}</span>
+                <span class="status" [attr.data-status]="task.status">
+                  {{ statusLabel(task.status) }}
+                </span>
+                <span class="priority" [attr.data-priority]="task.priority">
+                  {{ priorityLabel(task.priority) }}
+                </span>
+              </div>
+            </div>
+
+            <div class="task-actions">
+              <button type="button" class="secondary" (click)="edit(task)">
+                Editar
+              </button>
+              <button type="button" class="danger" (click)="remove(task)">
+                Excluir
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</section>

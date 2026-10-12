@@ -3,14 +3,18 @@
   <div class="welcome">
     <div>
       <span class="eyebrow">DEVFLOW AI / OVERVIEW</span>
+
       <h2>Seu workspace inteligente</h2>
+
       <p>
         Gerencie projetos, acompanhe tarefas e transforme
         informações em decisões.
       </p>
     </div>
 
-    <span class="demo-badge">Dashboard em desenvolvimento</span>
+    <span class="demo-badge">
+      Dashboard em desenvolvimento
+    </span>
   </div>
 
   <div class="metrics-grid">
@@ -18,24 +22,27 @@
       <article class="metric-card">
         <div class="metric-top">
           <span>{{ metric.label }}</span>
-          <span class="metric-icon">{{ metric.icon }}</span>
+
+          <span class="metric-icon">
+            {{ metric.icon }}
+          </span>
         </div>
 
         <strong>{{ metric.value }}</strong>
 
-        @if (metric.label === 'Projetos ativos') {
-          <small>
-            @if (projectsLoading()) {
-              Carregando projetos...
-            } @else if (projectsError()) {
-              Não foi possível carregar os projetos
-            } @else {
-              Dados reais do SQLite
-            }
-          </small>
-        } @else {
-          <small>Exemplo de indicador</small>
-        }
+        <small>
+          @if (metric.label === 'Projetos ativos' && projectsLoading()) {
+            Carregando projetos...
+          } @else if (metric.label === 'Projetos ativos' && projectsError()) {
+            Não foi possível carregar os projetos
+          } @else if (metric.label !== 'Projetos ativos' && tasksLoading()) {
+            Carregando tarefas...
+          } @else if (metric.label !== 'Projetos ativos' && tasksError()) {
+            Não foi possível carregar as tarefas
+          } @else {
+            {{ metric.caption }}
+          }
+        </small>
       </article>
     }
   </div>
@@ -48,7 +55,9 @@
       </div>
 
       <div class="placeholder-chart">
-        <span>Os gráficos serão implementados nesta área.</span>
+        <span>
+          Os gráficos serão implementados nesta área.
+        </span>
       </div>
     </article>
 
