@@ -1,0 +1,197 @@
+
+<section class="projects-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">DEVFLOW AI / PROJECTS</span>
+      <h1>Gerenciamento de projetos</h1>
+      <p>
+        Organize suas iniciativas e acompanhe cada etapa do trabalho.
+      </p>
+    </div>
+
+    <button
+      class="primary-button"
+      type="button"
+      (click)="openCreate()"
+    >
+      + Novo projeto
+    </button>
+  </header>
+
+  <div class="summary-grid">
+    <article class="summary-card">
+      <span>Total de projetos</span>
+      <strong>{{ totalProjects() }}</strong>
+    </article>
+
+    <article class="summary-card">
+      <span>Projetos ativos</span>
+      <strong>{{ activeProjects() }}</strong>
+    </article>
+
+    <article class="summary-card">
+      <span>Concluídos</span>
+      <strong>{{ completedProjects() }}</strong>
+    </article>
+  </div>
+
+  @if (error()) {
+    <div class="feedback error" role="alert">
+      {{ error() }}
+    </div>
+  }
+
+  @if (success()) {
+    <div class="feedback success" role="status">
+      {{ success() }}
+    </div>
+  }
+
+  @if (formOpen()) {
+    <section class="form-panel">
+      <div class="panel-header">
+        <div>
+          <h2>
+            {{ editingId() ? 'Editar projeto' : 'Novo projeto' }}
+          </h2>
+          <p>Preencha as informações abaixo.</p>
+        </div>
+
+        <button
+          type="button"
+          class="text-button"
+          (click)="closeForm()"
+          [disabled]="saving()"
+        >
+          Fechar
+        </button>
+      </div>
+
+      <form (ngSubmit)="saveProject()" #projectForm="ngForm">
+        <div class="form-field">
+          <label for="project-name">Nome do projeto</label>
+          <input
+            id="project-name"
+            name="name"
+            type="text"
+            maxlength="150"
+            required
+            [(ngModel)]="form.name"
+            placeholder="Ex.: DevFlow AI"
+          />
+        </div>
+
+        <div class="form-field">
+          <label for="project-description">Descrição</label>
+          <textarea
+            id="project-description"
+            name="description"
+            rows="4"
+            [(ngModel)]="form.description"
+            placeholder="Descreva o objetivo do projeto"
+          ></textarea>
+        </div>
+
+        <div class="form-field">
+          <label for="project-status">Status</label>
+          <select
+            id="project-status"
+            name="status"
+            [(ngModel)]="form.status"
+          >
+            <option value="planning">Planejamento</option>
+            <option value="in_progress">Em andamento</option>
+            <option value="completed">Concluído</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="closeForm()"
+            [disabled]="saving()"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="primary-button"
+            [disabled]="saving() || projectForm.invalid"
+          >
+            {{ saving() ? 'Salvando...' : 'Salvar projeto' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+
+  <section class="projects-panel">
+    <div class="panel-header">
+      <div>
+        <h2>Seus projetos</h2>
+        <p>Projetos armazenados no banco de dados.</p>
+      </div>
+
+      <span class="counter">{{ totalProjects() }} registros</span>
+    </div>
+
+    @if (loading()) {
+      <div class="empty-state" role="status">
+        Carregando projetos...
+      </div>
+    } @else if (!error() && projects().length === 0) {
+      <div class="empty-state">
+        <h3>Nenhum projeto cadastrado</h3>
+        <p>Crie seu primeiro projeto para começar.</p>
+      </div>
+    } @else {
+      <div class="projects-list">
+        @for (project of projects(); track project.id) {
+          <article class="project-item">
+            <div class="project-info">
+              <h3>{{ project.name }}</h3>
+              <p>
+                {{ project.description || 'Sem descrição.' }}
+              </p>
+              <small>
+                Criado em
+                {{ project.createdAt | date:'dd/MM/yyyy' }}
+              </small>
+            </div>
+
+            <div class="project-controls">
+              <select
+                aria-label="Status do projeto"
+                [value]="project.status"
+                (change)="changeStatus(project, $any($event.target).value)"
+              >
+                <option value="planning">Planejamento</option>
+                <option value="in_progress">Em andamento</option>
+                <option value="completed">Concluído</option>
+              </select>
+
+              <button
+                type="button"
+                class="secondary-button"
+                (click)="openEdit(project)"
+              >
+                Editar
+              </button>
+
+              <button
+                type="button"
+                class="danger-button"
+                (click)="deleteProject(project)"
+                [disabled]="deletingId() === project.id"
+              >
+                {{ deletingId() === project.id ? 'Excluindo...' : 'Excluir' }}
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</section>

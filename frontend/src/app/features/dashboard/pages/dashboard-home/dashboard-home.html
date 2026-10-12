@@ -10,11 +10,11 @@
       </p>
     </div>
 
-    <span class="demo-badge">Dados demonstrativos</span>
+    <span class="demo-badge">Dashboard em desenvolvimento</span>
   </div>
 
   <div class="metrics-grid">
-    @for (metric of metrics; track metric.label) {
+    @for (metric of metrics(); track metric.label) {
       <article class="metric-card">
         <div class="metric-top">
           <span>{{ metric.label }}</span>
@@ -22,7 +22,20 @@
         </div>
 
         <strong>{{ metric.value }}</strong>
-        <small>Exemplo de indicador</small>
+
+        @if (metric.label === 'Projetos ativos') {
+          <small>
+            @if (projectsLoading()) {
+              Carregando projetos...
+            } @else if (projectsError()) {
+              Não foi possível carregar os projetos
+            } @else {
+              Dados reais do SQLite
+            }
+          </small>
+        } @else {
+          <small>Exemplo de indicador</small>
+        }
       </article>
     }
   </div>

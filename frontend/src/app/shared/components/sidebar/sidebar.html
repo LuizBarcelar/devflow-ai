@@ -17,13 +17,22 @@
 
     <div class="nav-label">WORKSPACE</div>
 
-    <span class="nav-placeholder">▤ Projetos</span>
+    <a
+      routerLink="/projects"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      <span>▤</span>
+      Projetos
+    </a>
+
     <span class="nav-placeholder">☑ Tarefas</span>
     <span class="nav-placeholder">✧ Assistente IA</span>
   </nav>
 
   <div class="sidebar-footer">
     <span class="avatar">DF</span>
+
     <div>
       <strong>DevFlow Workspace</strong>
       <small>Ambiente de desenvolvimento</small>
