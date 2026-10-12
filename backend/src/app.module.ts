@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { Project } from './modules/projects/entities/project.entity.js';
+import { ProjectsModule } from './modules/projects/projects.module.js';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { Project } from './modules/projects/entities/project.entity.js';
       synchronize: false,
       logging: true,
     }),
+    ProjectsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
