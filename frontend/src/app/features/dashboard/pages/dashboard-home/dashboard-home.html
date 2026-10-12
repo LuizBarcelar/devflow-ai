@@ -2,7 +2,9 @@
 <section class="dashboard">
   <div class="welcome">
     <div>
-      <span class="eyebrow">DEVFLOW AI / OVERVIEW</span>
+      <span class="eyebrow">
+        DEVFLOW AI / OVERVIEW
+      </span>
 
       <h2>Seu workspace inteligente</h2>
 
@@ -13,7 +15,7 @@
     </div>
 
     <span class="demo-badge">
-      Dashboard em desenvolvimento
+      Dashboard Analytics
     </span>
   </div>
 
@@ -50,15 +52,28 @@
   <div class="dashboard-grid">
     <article class="panel">
       <div class="panel-heading">
-        <h3>Atividade dos projetos</h3>
-        <span>Prévia do módulo</span>
+        <h3>Tarefas por status</h3>
+        <span>Dados da API</span>
       </div>
 
-      <div class="placeholder-chart">
-        <span>
-          Os gráficos serão implementados nesta área.
-        </span>
-      </div>
+      @if (tasksLoading()) {
+        <div class="chart-state">
+          Carregando tarefas...
+        </div>
+      } @else if (tasksError()) {
+        <div class="chart-state chart-error">
+          Não foi possível carregar as tarefas.
+        </div>
+      } @else if (totalTasks() === 0) {
+        <div class="chart-state">
+          Nenhuma tarefa cadastrada.
+        </div>
+      } @else {
+        <app-analytics-chart
+          [options]="statusChartOptions()"
+          description="Quantidade de tarefas a fazer, em andamento e concluídas"
+        />
+      }
     </article>
 
     <article class="panel">
@@ -87,6 +102,64 @@
       <div class="system-detail">
         <span>Endpoint</span>
         <code>GET /api/health</code>
+      </div>
+    </article>
+  </div>
+
+  <div class="analytics-grid">
+    <article class="panel">
+      <div class="panel-heading">
+        <h3>Tarefas por prioridade</h3>
+        <span>Distribuição das prioridades</span>
+      </div>
+
+      @if (tasksLoading()) {
+        <div class="chart-state">
+          Carregando prioridades...
+        </div>
+      } @else if (tasksError()) {
+        <div class="chart-state chart-error">
+          Não foi possível carregar as tarefas.
+        </div>
+      } @else if (totalTasks() === 0) {
+        <div class="chart-state">
+          Nenhuma tarefa cadastrada.
+        </div>
+      } @else {
+        <app-analytics-chart
+          [options]="priorityChartOptions()"
+          description="Distribuição de tarefas por prioridade baixa, média e alta"
+        />
+      }
+    </article>
+
+    <article class="panel analytics-summary">
+      <div class="panel-heading">
+        <h3>Resumo de produtividade</h3>
+        <span>Visão geral</span>
+      </div>
+
+      <div class="summary-content">
+        <div class="summary-item">
+          <span>Total de tarefas</span>
+          <strong>
+            {{ tasksLoading() ? '...' : tasksError() ? '—' : totalTasks() }}
+          </strong>
+        </div>
+
+        <div class="summary-item">
+          <span>Tarefas concluídas</span>
+          <strong>
+            {{ tasksLoading() ? '...' : tasksError() ? '—' : completedTasks() }}
+          </strong>
+        </div>
+
+        <div class="summary-item">
+          <span>Taxa de conclusão</span>
+          <strong>
+            {{ tasksLoading() ? '...' : tasksError() ? '—' : completionRate() + '%' }}
+          </strong>
+        </div>
       </div>
     </article>
   </div>
