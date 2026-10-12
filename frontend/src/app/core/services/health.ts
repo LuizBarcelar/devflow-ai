@@ -14,8 +14,6 @@ export class Health {
   private readonly http = inject(HttpClient);
 
   checkHealth() {
-    return this.http.get<HealthResponse>(
-      'http://localhost:8080/api/health'
-    );
+    return this.http.get<HealthResponse>('http://localhost:3000/api/health');
   }
 }

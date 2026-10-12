@@ -28,7 +28,7 @@ export class DashboardHome {
 
         this.apiConnected.set(connected);
         this.apiStatus.set(
-          connected ? 'API Go conectada' : 'Resposta inesperada da API'
+          connected ? 'API NestJS conectada' : 'Resposta inesperada da API'
         );
       },
       error: () => {

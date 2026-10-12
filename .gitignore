@@ -22,3 +22,12 @@ coverage/
 # System
 .DS_Store
 Thumbs.db
+
+# TypeScript incremental build
+*.tsbuildinfo
+
+# SQLite database files
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
