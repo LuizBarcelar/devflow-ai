@@ -31,3 +31,11 @@ Thumbs.db
 *.db-*
 *.sqlite
 *.sqlite-*
+
+# Backend database
+backend/data/*.db
+backend/data/*.db-shm
+backend/data/*.db-wal
+
+# Local database backups
+backend/backups/
