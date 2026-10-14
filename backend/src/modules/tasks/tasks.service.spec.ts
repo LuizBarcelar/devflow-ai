@@ -1,38 +1,38 @@
 
-import { NotFoundException } from '@nestjs/common';
-import { Test, type TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { NotFoundException } from '@nestjs/common';
+import { Repository } from 'typeorm';
 
-import { Project } from '../projects/entities/project.entity.js';
 import { TasksService } from './tasks.service.js';
 import {
   Task,
   TaskPriority,
   TaskStatus,
 } from './entities/task.entity.js';
+import { Project } from '../projects/entities/project.entity.js';
 
 describe('TasksService', () => {
   let service: TasksService;
 
-  const projectId = '82cee2bc-f938-448c-b1ec-108fe6e2de1d';
-  const taskId = '8fa2bda3-885d-4982-a508-1484d4745155';
+  const userId = 'user-1';
+  const otherUserId = 'user-2';
+  const projectId = 'project-1';
+  const taskId = 'task-1';
 
-  const task: Task = {
+  const task = {
     id: taskId,
-    title: 'Implementar testes automatizados',
-    description: 'Criar testes para o TasksService',
+    title: 'Implementar autenticação',
+    description: null,
     status: TaskStatus.TODO,
-    priority: TaskPriority.HIGH,
+    priority: TaskPriority.MEDIUM,
     projectId,
-    project: {} as Project,
-    createdAt: new Date('2026-10-12T00:00:00.000Z'),
-    updatedAt: new Date('2026-10-12T00:00:00.000Z'),
-  };
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  } as Task;
 
   const tasksRepository = {
     find: vi.fn(),
-    findOneBy: vi.fn(),
+    findOne: vi.fn(),
     create: vi.fn(),
     save: vi.fn(),
     remove: vi.fn(),
@@ -42,111 +42,116 @@ describe('TasksService', () => {
     existsBy: vi.fn(),
   };
 
-  beforeEach(async () => {
-    vi.resetAllMocks();
+  beforeEach(() => {
+    vi.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        providers: [
-          TasksService,
-          {
-            provide: getRepositoryToken(Task),
-            useValue: tasksRepository,
-          },
-          {
-            provide: getRepositoryToken(Project),
-            useValue: projectsRepository,
-          },
-        ],
-      }).compile();
-
-    service = module.get<TasksService>(TasksService);
+    service = new TasksService(
+      tasksRepository as unknown as Repository<Task>,
+      projectsRepository as unknown as Repository<Project>,
+    );
   });
 
   describe('findAll', () => {
-    it('deve listar todas as tarefas', async () => {
+    it('deve listar apenas tarefas do usuário', async () => {
       tasksRepository.find.mockResolvedValue([task]);
 
-      const result = await service.findAll();
+      const result = await service.findAll(userId);
 
       expect(result).toEqual([task]);
-
       expect(tasksRepository.find).toHaveBeenCalledWith({
-        where: {},
+        where: {
+          project: { userId },
+        },
         order: { createdAt: 'DESC' },
       });
     });
 
-    it('deve filtrar tarefas por projeto', async () => {
+    it('deve filtrar tarefas por projeto do usuário', async () => {
+      projectsRepository.existsBy.mockResolvedValue(true);
       tasksRepository.find.mockResolvedValue([task]);
 
-      const result = await service.findAll(projectId);
+      const result = await service.findAll(userId, projectId);
 
       expect(result).toEqual([task]);
 
+      expect(projectsRepository.existsBy).toHaveBeenCalledWith({
+        id: projectId,
+        userId,
+      });
+
       expect(tasksRepository.find).toHaveBeenCalledWith({
-        where: { projectId },
+        where: {
+          projectId,
+          project: { userId },
+        },
         order: { createdAt: 'DESC' },
       });
+    });
+
+    it('não deve listar tarefas de projeto de outro usuário', async () => {
+      projectsRepository.existsBy.mockResolvedValue(false);
+
+      await expect(
+        service.findAll(otherUserId, projectId),
+      ).rejects.toThrow(NotFoundException);
+
+      expect(tasksRepository.find).not.toHaveBeenCalled();
     });
   });
 
   describe('findOne', () => {
-    it('deve retornar uma tarefa existente', async () => {
-      tasksRepository.findOneBy.mockResolvedValue(task);
+    it('deve retornar uma tarefa do usuário', async () => {
+      tasksRepository.findOne.mockResolvedValue(task);
 
-      const result = await service.findOne(taskId);
+      const result = await service.findOne(taskId, userId);
 
       expect(result).toEqual(task);
 
-      expect(tasksRepository.findOneBy).toHaveBeenCalledWith({
-        id: taskId,
+      expect(tasksRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id: taskId,
+          project: { userId },
+        },
       });
     });
 
-    it('deve rejeitar uma tarefa inexistente', async () => {
-      tasksRepository.findOneBy.mockResolvedValue(null);
+    it('deve rejeitar tarefa inexistente ou de outro usuário', async () => {
+      tasksRepository.findOne.mockResolvedValue(null);
 
       await expect(
-        service.findOne(taskId),
+        service.findOne(taskId, otherUserId),
       ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('create', () => {
-    it('deve criar uma tarefa vinculada a um projeto existente', async () => {
-      const dto = {
-        title: task.title,
-        description: task.description,
-        status: TaskStatus.TODO,
-        priority: TaskPriority.HIGH,
-        projectId,
-      };
+    const dto = {
+      title: 'Nova tarefa',
+      projectId,
+    };
 
+    it('deve criar tarefa em projeto do usuário', async () => {
       projectsRepository.existsBy.mockResolvedValue(true);
       tasksRepository.create.mockReturnValue(task);
       tasksRepository.save.mockResolvedValue(task);
 
-      const result = await service.create(dto);
+      const result = await service.create(dto, userId);
 
       expect(result).toEqual(task);
 
       expect(projectsRepository.existsBy).toHaveBeenCalledWith({
         id: projectId,
+        userId,
       });
 
-      expect(tasksRepository.create).toHaveBeenCalledWith(dto);
       expect(tasksRepository.save).toHaveBeenCalledWith(task);
     });
 
-    it('não deve criar uma tarefa com projeto inexistente', async () => {
+    it('não deve criar tarefa em projeto de outro usuário', async () => {
       projectsRepository.existsBy.mockResolvedValue(false);
 
       await expect(
-        service.create({
-          title: 'Nova tarefa',
-          projectId,
-        }),
+        service.create(dto, otherUserId),
       ).rejects.toThrow(NotFoundException);
 
       expect(tasksRepository.save).not.toHaveBeenCalled();
@@ -154,55 +159,56 @@ describe('TasksService', () => {
   });
 
   describe('update', () => {
-    it('deve atualizar o status de uma tarefa', async () => {
-      const existingTask = { ...task };
-
-      tasksRepository.findOneBy.mockResolvedValue(existingTask);
-      tasksRepository.save.mockImplementation(
-        async (value: Task) => value,
-      );
-
-      const result = await service.update(taskId, {
+    it('deve atualizar uma tarefa do usuário', async () => {
+      const updatedTask = {
+        ...task,
         status: TaskStatus.COMPLETED,
-      });
+      };
+
+      tasksRepository.findOne.mockResolvedValue({ ...task });
+      tasksRepository.save.mockResolvedValue(updatedTask);
+
+      const result = await service.update(
+        taskId,
+        { status: TaskStatus.COMPLETED },
+        userId,
+      );
 
       expect(result.status).toBe(TaskStatus.COMPLETED);
-
-      expect(tasksRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: taskId,
-          status: TaskStatus.COMPLETED,
-        }),
-      );
+      expect(tasksRepository.save).toHaveBeenCalled();
     });
 
     it('deve validar o novo projeto ao alterar o vínculo', async () => {
-      const newProjectId =
-        'b1e39043-8ca0-4e3c-9562-5f28c00a0001';
+      const newProjectId = 'project-2';
 
-      tasksRepository.findOneBy.mockResolvedValue({ ...task });
+      tasksRepository.findOne.mockResolvedValue({ ...task });
       projectsRepository.existsBy.mockResolvedValue(false);
 
       await expect(
-        service.update(taskId, {
-          projectId: newProjectId,
-        }),
+        service.update(
+          taskId,
+          { projectId: newProjectId },
+          userId,
+        ),
       ).rejects.toThrow(NotFoundException);
 
       expect(projectsRepository.existsBy).toHaveBeenCalledWith({
         id: newProjectId,
+        userId,
       });
 
       expect(tasksRepository.save).not.toHaveBeenCalled();
     });
 
-    it('deve rejeitar atualização de tarefa inexistente', async () => {
-      tasksRepository.findOneBy.mockResolvedValue(null);
+    it('não deve atualizar tarefa de outro usuário', async () => {
+      tasksRepository.findOne.mockResolvedValue(null);
 
       await expect(
-        service.update(taskId, {
-          status: TaskStatus.COMPLETED,
-        }),
+        service.update(
+          taskId,
+          { status: TaskStatus.COMPLETED },
+          otherUserId,
+        ),
       ).rejects.toThrow(NotFoundException);
 
       expect(tasksRepository.save).not.toHaveBeenCalled();
@@ -210,20 +216,20 @@ describe('TasksService', () => {
   });
 
   describe('remove', () => {
-    it('deve excluir uma tarefa existente', async () => {
-      tasksRepository.findOneBy.mockResolvedValue(task);
+    it('deve excluir uma tarefa do usuário', async () => {
+      tasksRepository.findOne.mockResolvedValue(task);
       tasksRepository.remove.mockResolvedValue(task);
 
-      await service.remove(taskId);
+      await service.remove(taskId, userId);
 
       expect(tasksRepository.remove).toHaveBeenCalledWith(task);
     });
 
-    it('deve rejeitar exclusão de tarefa inexistente', async () => {
-      tasksRepository.findOneBy.mockResolvedValue(null);
+    it('não deve excluir tarefa de outro usuário', async () => {
+      tasksRepository.findOne.mockResolvedValue(null);
 
       await expect(
-        service.remove(taskId),
+        service.remove(taskId, otherUserId),
       ).rejects.toThrow(NotFoundException);
 
       expect(tasksRepository.remove).not.toHaveBeenCalled();

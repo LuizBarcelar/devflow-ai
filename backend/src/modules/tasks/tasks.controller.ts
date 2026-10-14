@@ -11,45 +11,73 @@ import {
   Patch,
   Post,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+
+import {
+  JwtAuthGuard,
+  type AuthenticatedRequest,
+} from '../auth/guards/jwt-auth.guard.js';
 
 import { CreateTaskDto } from './dto/create-task.dto.js';
 import { UpdateTaskDto } from './dto/update-task.dto.js';
 import { TasksService } from './tasks.service.js';
 
 @Controller('tasks')
+@UseGuards(JwtAuthGuard)
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+  constructor(
+    private readonly tasksService: TasksService,
+  ) {}
 
   @Get()
   findAll(
+    @Req() request: AuthenticatedRequest,
     @Query('projectId', new ParseUUIDPipe({ optional: true }))
     projectId?: string,
   ) {
-    return this.tasksService.findAll(projectId);
+    return this.tasksService.findAll(
+      request.user!.id,
+      projectId,
+    );
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.tasksService.findOne(id);
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.tasksService.findOne(id, request.user!.id);
   }
 
   @Post()
-  create(@Body() dto: CreateTaskDto) {
-    return this.tasksService.create(dto);
+  create(
+    @Body() dto: CreateTaskDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.tasksService.create(dto, request.user!.id);
   }
 
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTaskDto,
+    @Req() request: AuthenticatedRequest,
   ) {
-    return this.tasksService.update(id, dto);
+    return this.tasksService.update(
+      id,
+      dto,
+      request.user!.id,
+    );
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.tasksService.remove(id);
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.tasksService.remove(id, request.user!.id);
   }
 }

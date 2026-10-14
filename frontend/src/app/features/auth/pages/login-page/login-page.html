@@ -1,0 +1,118 @@
+<main class="login-page">
+  <section class="login-card">
+    <div class="brand">
+      <div class="brand-icon">D</div>
+
+      <div>
+        <h1>DevFlow <span>AI</span></h1>
+        <p>Seu espaço de produtividade</p>
+      </div>
+    </div>
+
+    <div class="welcome">
+      <h2>Bem-vindo de volta</h2>
+      <p>Entre na sua conta para acessar o dashboard.</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="field">
+        <label for="email">E-mail</label>
+
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="seu@email.com"
+          autocomplete="username"
+        />
+
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <small>Informe um e-mail válido.</small>
+        }
+      </div>
+
+      <div class="field">
+        <label for="password">Senha</label>
+
+        <div class="password-wrapper">
+          <input
+            id="password"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Digite sua senha"
+            autocomplete="current-password"
+          />
+
+          <button
+            class="password-toggle"
+            type="button"
+            (click)="togglePassword()"
+            [attr.aria-label]="showPassword() ? 'Ocultar senha' : 'Mostrar senha'"
+            [attr.aria-pressed]="showPassword()"
+            [attr.title]="showPassword() ? 'Ocultar senha' : 'Mostrar senha'"
+          >
+            @if (showPassword()) {
+              <!-- Olho riscado: ocultar senha -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                <path d="M9.9 5.1A10.9 10.9 0 0 1 12 5c7 0 10 7 10 7a13.8 13.8 0 0 1-4 4.9" />
+                <path d="M6.6 6.6C3.4 8.4 2 12 2 12s3 7 10 7a10.8 10.8 0 0 0 5.4-1.4" />
+                <path d="m2 2 20 20" />
+              </svg>
+            } @else {
+              <!-- Olho aberto: mostrar senha -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            }
+          </button>
+        </div>
+
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+          <small>Informe sua senha.</small>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <p class="error-message" role="alert">
+          {{ errorMessage() }}
+        </p>
+      }
+
+      <button
+        class="login-button"
+        type="submit"
+        [disabled]="loading()"
+      >
+        {{ loading() ? 'Entrando...' : 'Entrar no DevFlow AI' }}
+      </button>
+    </form>
+
+    <p class="footer-text">
+      DevFlow AI — Gestão inteligente de projetos
+    </p>
+  </section>
+</main>

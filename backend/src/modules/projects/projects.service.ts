@@ -17,14 +17,18 @@ export class ProjectsService {
     private readonly projectsRepository: Repository<Project>,
   ) {}
 
-  findAll(): Promise<Project[]> {
+  findAll(userId: string): Promise<Project[]> {
     return this.projectsRepository.find({
+      where: { userId },
       order: { createdAt: 'DESC' },
     });
   }
 
-  async findOne(id: string): Promise<Project> {
-    const project = await this.projectsRepository.findOneBy({ id });
+  async findOne(id: string, userId: string): Promise<Project> {
+    const project = await this.projectsRepository.findOneBy({
+      id,
+      userId,
+    });
 
     if (!project) {
       throw new NotFoundException('Projeto não encontrado');
@@ -33,24 +37,32 @@ export class ProjectsService {
     return project;
   }
 
-  async create(dto: CreateProjectDto): Promise<Project> {
-    const project = this.projectsRepository.create(dto);
+  async create(
+    dto: CreateProjectDto,
+    userId: string,
+  ): Promise<Project> {
+    const project = this.projectsRepository.create({
+      ...dto,
+      userId,
+    });
+
     return this.projectsRepository.save(project);
   }
 
   async update(
     id: string,
     dto: UpdateProjectDto,
+    userId: string,
   ): Promise<Project> {
-    const project = await this.findOne(id);
+    const project = await this.findOne(id, userId);
 
     Object.assign(project, dto);
 
     return this.projectsRepository.save(project);
   }
 
-  async remove(id: string): Promise<void> {
-    const project = await this.findOne(id);
+  async remove(id: string, userId: string): Promise<void> {
+    const project = await this.findOne(id, userId);
     await this.projectsRepository.remove(project);
   }
 }

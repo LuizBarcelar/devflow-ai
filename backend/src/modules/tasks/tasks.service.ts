@@ -21,23 +21,44 @@ export class TasksService {
     private readonly projectsRepository: Repository<Project>,
   ) {}
 
-  private async ensureProjectExists(id: string): Promise<void> {
-    const exists = await this.projectsRepository.existsBy({ id });
+  private async ensureProjectOwned(
+    projectId: string,
+    userId: string,
+  ): Promise<void> {
+    const exists = await this.projectsRepository.existsBy({
+      id: projectId,
+      userId,
+    });
 
     if (!exists) {
       throw new NotFoundException('Projeto não encontrado');
     }
   }
 
-  findAll(projectId?: string): Promise<Task[]> {
+  async findAll(
+    userId: string,
+    projectId?: string,
+  ): Promise<Task[]> {
+    if (projectId) {
+      await this.ensureProjectOwned(projectId, userId);
+    }
+
     return this.tasksRepository.find({
-      where: projectId ? { projectId } : {},
+      where: {
+        ...(projectId ? { projectId } : {}),
+        project: { userId },
+      },
       order: { createdAt: 'DESC' },
     });
   }
 
-  async findOne(id: string): Promise<Task> {
-    const task = await this.tasksRepository.findOneBy({ id });
+  async findOne(id: string, userId: string): Promise<Task> {
+    const task = await this.tasksRepository.findOne({
+      where: {
+        id,
+        project: { userId },
+      },
+    });
 
     if (!task) {
       throw new NotFoundException('Tarefa não encontrada');
@@ -46,19 +67,26 @@ export class TasksService {
     return task;
   }
 
-  async create(dto: CreateTaskDto): Promise<Task> {
-    await this.ensureProjectExists(dto.projectId);
+  async create(
+    dto: CreateTaskDto,
+    userId: string,
+  ): Promise<Task> {
+    await this.ensureProjectOwned(dto.projectId, userId);
 
     const task = this.tasksRepository.create(dto);
 
     return this.tasksRepository.save(task);
   }
 
-  async update(id: string, dto: UpdateTaskDto): Promise<Task> {
-    const task = await this.findOne(id);
+  async update(
+    id: string,
+    dto: UpdateTaskDto,
+    userId: string,
+  ): Promise<Task> {
+    const task = await this.findOne(id, userId);
 
     if (dto.projectId !== undefined) {
-      await this.ensureProjectExists(dto.projectId);
+      await this.ensureProjectOwned(dto.projectId, userId);
     }
 
     Object.assign(task, dto);
@@ -66,8 +94,8 @@ export class TasksService {
     return this.tasksRepository.save(task);
   }
 
-  async remove(id: string): Promise<void> {
-    const task = await this.findOne(id);
+  async remove(id: string, userId: string): Promise<void> {
+    const task = await this.findOne(id, userId);
 
     await this.tasksRepository.remove(task);
   }
