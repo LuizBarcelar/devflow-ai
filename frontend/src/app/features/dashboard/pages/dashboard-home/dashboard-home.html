@@ -1,5 +1,6 @@
 
 <section class="dashboard">
+  <!-- Apresentação -->
   <div class="welcome">
     <div>
       <span class="eyebrow">
@@ -19,6 +20,43 @@
     </span>
   </div>
 
+  <!-- Filtro por projeto -->
+  <div class="analytics-toolbar">
+    <div class="toolbar-info">
+      <h3>Análise de produtividade</h3>
+
+      <p>
+        Acompanhe os indicadores de todos os projetos
+        ou selecione um projeto específico.
+      </p>
+    </div>
+
+    <div class="project-filter">
+      <label for="project-filter">
+        Filtrar por projeto
+      </label>
+
+      <select
+        id="project-filter"
+        #projectSelect
+        [value]="selectedProjectId()"
+        [disabled]="projectsLoading() || projectsError()"
+        (change)="selectProject(projectSelect.value)"
+      >
+        <option value="">
+          Todos os projetos
+        </option>
+
+        @for (project of projects(); track project.id) {
+          <option [value]="project.id">
+            {{ project.name }}
+          </option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Indicadores -->
   <div class="metrics-grid">
     @for (metric of metrics(); track metric.label) {
       <article class="metric-card">
@@ -33,13 +71,25 @@
         <strong>{{ metric.value }}</strong>
 
         <small>
-          @if (metric.label === 'Projetos ativos' && projectsLoading()) {
+          @if (
+            metric.label === 'Projetos ativos' &&
+            projectsLoading()
+          ) {
             Carregando projetos...
-          } @else if (metric.label === 'Projetos ativos' && projectsError()) {
+          } @else if (
+            metric.label === 'Projetos ativos' &&
+            projectsError()
+          ) {
             Não foi possível carregar os projetos
-          } @else if (metric.label !== 'Projetos ativos' && tasksLoading()) {
+          } @else if (
+            metric.label !== 'Projetos ativos' &&
+            tasksLoading()
+          ) {
             Carregando tarefas...
-          } @else if (metric.label !== 'Projetos ativos' && tasksError()) {
+          } @else if (
+            metric.label !== 'Projetos ativos' &&
+            tasksError()
+          ) {
             Não foi possível carregar as tarefas
           } @else {
             {{ metric.caption }}
@@ -49,6 +99,7 @@
     }
   </div>
 
+  <!-- Gráfico de status e monitoramento -->
   <div class="dashboard-grid">
     <article class="panel">
       <div class="panel-heading">
@@ -66,7 +117,7 @@
         </div>
       } @else if (totalTasks() === 0) {
         <div class="chart-state">
-          Nenhuma tarefa cadastrada.
+          Nenhuma tarefa encontrada para o filtro selecionado.
         </div>
       } @else {
         <app-analytics-chart
@@ -106,6 +157,7 @@
     </article>
   </div>
 
+  <!-- Gráfico de prioridades e resumo -->
   <div class="analytics-grid">
     <article class="panel">
       <div class="panel-heading">
@@ -123,7 +175,7 @@
         </div>
       } @else if (totalTasks() === 0) {
         <div class="chart-state">
-          Nenhuma tarefa cadastrada.
+          Nenhuma tarefa encontrada para o filtro selecionado.
         </div>
       } @else {
         <app-analytics-chart
@@ -142,22 +194,43 @@
       <div class="summary-content">
         <div class="summary-item">
           <span>Total de tarefas</span>
+
           <strong>
-            {{ tasksLoading() ? '...' : tasksError() ? '—' : totalTasks() }}
+            {{
+              tasksLoading()
+                ? '...'
+                : tasksError()
+                  ? '—'
+                  : totalTasks()
+            }}
           </strong>
         </div>
 
         <div class="summary-item">
           <span>Tarefas concluídas</span>
+
           <strong>
-            {{ tasksLoading() ? '...' : tasksError() ? '—' : completedTasks() }}
+            {{
+              tasksLoading()
+                ? '...'
+                : tasksError()
+                  ? '—'
+                  : completedTasks()
+            }}
           </strong>
         </div>
 
         <div class="summary-item">
           <span>Taxa de conclusão</span>
+
           <strong>
-            {{ tasksLoading() ? '...' : tasksError() ? '—' : completionRate() + '%' }}
+            {{
+              tasksLoading()
+                ? '...'
+                : tasksError()
+                  ? '—'
+                  : completionRate() + '%'
+            }}
           </strong>
         </div>
       </div>

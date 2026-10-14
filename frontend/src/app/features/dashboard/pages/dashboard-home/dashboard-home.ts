@@ -1,5 +1,10 @@
 
-import { Component, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 
 import { Health } from '../../../../core/services/health';
 
@@ -29,33 +34,58 @@ export class DashboardHome {
   private readonly projectsService = inject(ProjectsService);
   private readonly tasksService = inject(TasksService);
 
+  // API
   readonly apiStatus = signal('Verificando conexão...');
   readonly apiConnected = signal(false);
 
+  // Projetos
   readonly projects = signal<Project[]>([]);
   readonly projectsLoading = signal(true);
   readonly projectsError = signal(false);
 
+  // Tarefas
   readonly tasks = signal<Task[]>([]);
   readonly tasksLoading = signal(true);
   readonly tasksError = signal(false);
 
+  // Filtro por projeto
+  readonly selectedProjectId = signal<string>('');
+
+  readonly filteredTasks = computed(() => {
+    const projectId = this.selectedProjectId();
+
+    if (!projectId) {
+      return this.tasks();
+    }
+
+    return this.tasks().filter(
+      task => task.projectId === projectId,
+    );
+  });
+
+  selectProject(projectId: string): void {
+    this.selectedProjectId.set(projectId);
+  }
+
+  // Indicadores
   readonly activeProjects = computed(() =>
     this.projects().filter(
       project => project.status !== 'completed',
     ).length,
   );
 
-  readonly totalTasks = computed(() => this.tasks().length);
+  readonly totalTasks = computed(() =>
+    this.filteredTasks().length,
+  );
 
   readonly completedTasks = computed(() =>
-    this.tasks().filter(
+    this.filteredTasks().filter(
       task => task.status === 'completed',
     ).length,
   );
 
   readonly inProgressTasks = computed(() =>
-    this.tasks().filter(
+    this.filteredTasks().filter(
       task => task.status === 'in_progress',
     ).length,
   );
@@ -102,31 +132,32 @@ export class DashboardHome {
         label: 'Projetos ativos',
         value: projectValue,
         icon: '▣',
-        caption: 'Dados reais do SQLite',
+        caption: 'Total geral de projetos ativos',
       },
       {
         label: 'Tarefas concluídas',
         value: taskValue(this.completedTasks()),
         icon: '✓',
-        caption: 'Dados reais do SQLite',
+        caption: 'Tarefas concluídas no filtro',
       },
       {
         label: 'Em andamento',
         value: taskValue(this.inProgressTasks()),
         icon: '◷',
-        caption: 'Dados reais do SQLite',
+        caption: 'Tarefas em andamento no filtro',
       },
       {
         label: 'Taxa de conclusão',
         value: completionValue,
         icon: '↗',
-        caption: 'Tarefas concluídas / total',
+        caption: 'Tarefas concluídas / total filtrado',
       },
     ];
   });
 
+  // Gráfico de tarefas por status
   readonly statusChartOptions = computed<AnalyticsChartOption>(() => {
-    const tasks = this.tasks();
+    const tasks = this.filteredTasks();
 
     const todo = tasks.filter(
       task => task.status === 'todo',
@@ -152,7 +183,7 @@ export class DashboardHome {
 
       grid: {
         left: 12,
-        right: 24,
+        right: 36,
         top: 24,
         bottom: 12,
         containLabel: true,
@@ -214,14 +245,20 @@ export class DashboardHome {
             show: true,
             position: 'right',
             color: '#cbd5e1',
+            formatter: params => {
+              const value = Number(params.value ?? 0);
+
+              return value > 0 ? String(value) : '';
+            },
           },
         },
       ],
     };
   });
 
+  // Gráfico de tarefas por prioridade
   readonly priorityChartOptions = computed<AnalyticsChartOption>(() => {
-    const tasks = this.tasks();
+    const tasks = this.filteredTasks();
 
     const low = tasks.filter(
       task => task.priority === 'low',
@@ -250,20 +287,57 @@ export class DashboardHome {
         },
       },
 
+      graphic: [
+        {
+          type: 'group',
+          left: 'center',
+          top: '43%',
+          bounding: 'raw',
+          children: [
+            {
+              type: 'text',
+              left: 'center',
+              top: -14,
+              style: {
+                text: String(tasks.length),
+                fill: '#f8fafc',
+                fontSize: 24,
+                fontWeight: 'bold',
+                textAlign: 'center',
+                textVerticalAlign: 'middle',
+              },
+            },
+            {
+              type: 'text',
+              left: 'center',
+              top: 14,
+              style: {
+                text: 'Tarefas',
+                fill: '#94a3b8',
+                fontSize: 12,
+                textAlign: 'center',
+                textVerticalAlign: 'middle',
+              },
+            },
+          ],
+        },
+      ],
+
       series: [
         {
           type: 'pie',
-          radius: ['48%', '72%'],
+          radius: ['52%', '74%'],
           center: ['50%', '43%'],
           avoidLabelOverlap: true,
           label: {
             show: false,
           },
+          labelLine: {
+            show: false,
+          },
           emphasis: {
-            label: {
-              show: true,
-              fontWeight: 'bold',
-            },
+            scale: true,
+            scaleSize: 6,
           },
           data: [
             {
@@ -293,6 +367,7 @@ export class DashboardHome {
     this.loadTasks();
   }
 
+  // Verificar conexão com a API
   private loadHealth(): void {
     this.healthService.checkHealth().subscribe({
       next: response => {
@@ -312,6 +387,7 @@ export class DashboardHome {
     });
   }
 
+  // Carregar projetos
   private loadProjects(): void {
     this.projectsService.findAll().subscribe({
       next: projects => {
@@ -328,6 +404,7 @@ export class DashboardHome {
     });
   }
 
+  // Carregar tarefas
   private loadTasks(): void {
     this.tasksService.getAll().subscribe({
       next: tasks => {
